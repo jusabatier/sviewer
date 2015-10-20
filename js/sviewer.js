@@ -352,7 +352,18 @@ function initmap() {
         }
         return config.layersBackground[config.lb];
     }
-
+    
+    /**
+     * Print the current displayed map
+     * Some bug with RAM constated for old versions of Chromium (update it !)
+     */
+    function printMap() {
+    	map.once('postcompose', function(event) {
+    		var canvas = event.context.canvas;
+    		document.getElementById('prBt').href = canvas.toDataURL('image/png');
+    	});
+    	map.renderSync();
+    }
 
     /**
      * Loads, parses a Web Map Context and instanciates layers
@@ -1372,6 +1383,7 @@ ol.extent.getTopRight(extent).reverse().join(" "),
     $('#zoBt').click(zoomOut);
     $('#zeBt').click(zoomInit);
     $('#bgBt').click(switchBackground);
+    $('#prBt').click(printMap);
 
     // geolocation form
     $('#zpBt').click(locateMe);
