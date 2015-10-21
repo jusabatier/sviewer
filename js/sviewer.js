@@ -704,7 +704,7 @@ ol.extent.getTopRight(extent).reverse().join(" "),
             );
 
             // response order = layer order
-            var domResponse =  $('<div><span class="sv-md-title">' + escHTML(this.md.title) + '</span></div>');
+            var domResponse =  $('<div></div>');
             $('#querycontent').append(domResponse);
             // ajax request
             $.mobile.loading('show');
