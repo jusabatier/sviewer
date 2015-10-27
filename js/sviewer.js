@@ -76,6 +76,7 @@ function initmap() {
             sldurl: null,
             format: 'image/png',
             singletile: 'false',
+            openls: 'true',
             opacity: 1
         };
         this.md = {
@@ -535,7 +536,9 @@ function initmap() {
      * @param text {String} the OpenLS plain text query
      */
     function openLsRequest(text) {
-
+        if( config.openls == 'false' )		
+			return false;
+        
         function onOpenLSSuccess (response) {
             $.mobile.loading('hide');
             try {
@@ -952,7 +955,7 @@ ol.extent.getTopRight(extent).reverse().join(" "),
         var data = event.data;
         marker.setPosition(event.data.coordinates);
         if (data.extent.length===4 && !(data.extent[0] == data.extent[2] && data.extent[1] == data.extent[3])) {
-            view.fit(data.extent, map.getSize());
+            view.fit(data.extent, map.getSize(), {maxZoom: 21});
         } else {
             view.setCenter(data.coordinates,map.getSize());
             view.setZoom(data.zoom || 16);
@@ -993,7 +996,6 @@ ol.extent.getTopRight(extent).reverse().join(" "),
                         'coordinates': (geom.getType()==='Point') ? geom.getCoordinates() : ol.extent.getCenter(geom.getExtent())
                     }, onSearchItemClick)
                 .parent()
-                .attr("title", tips.join('\n'))
                 .appendTo($("#searchResults"));
         });
         $("#searchResults").listview().listview('refresh');
@@ -1126,15 +1128,30 @@ ol.extent.getTopRight(extent).reverse().join(" "),
         if (view.getZoom()<17) view.setZoom(18) ;
     }
     
+    function showGeolocError(error) {		
+		switch(error.code) {		
+			case error.PERMISSION_DENIED:		
+				messagePopup(tr("User denied the request for Geolocation."));		
+				break;		
+			case error.POSITION_UNAVAILABLE:		
+				messagePopup(tr("Location information is unavailable."));		
+				break;		
+			case error.TIMEOUT:		
+				messagePopup(tr("The request to get user location timed out."));		
+				break;		
+			case error.UNKNOWN_ERROR:		
+				messagePopup(tr("An unknown error occurred."));		
+				break;		
+		}		
+	}
+    
     // get device position
     function locateMe() {
         if (navigator.geolocation) {
             messagePopup(tr("estimating device position ..."));
             navigator.geolocation.getCurrentPosition(
                 showPosition, 
-                function(e) {
-                    messagePopup(tr("device position error"));
-                },
+                showGeolocError,
                 {maximumAge: 60000, enableHighAccuracy: true, timeout: 30000}
             );
         } else {
@@ -1253,7 +1270,15 @@ ol.extent.getTopRight(extent).reverse().join(" "),
         if (qs.s) {
             config.search = true;
             config.searchparams = {};
-            $("#addressForm label").text('Features or ' + $("#addressForm label").text())
+            if (qs.openls)		
+				config.openls = qs.openls;		
+			else		
+				config.openls = true;		
+					
+			if( config.openls == 'false' )		
+				$("#addressForm label").text('Features');		
+			else		
+				$("#addressForm label").text('Features or ' + $("#addressForm label").text());
         }
     }
 
